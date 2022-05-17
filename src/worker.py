@@ -108,7 +108,7 @@ class Worker(Thread):
         shelves = {}
         for shelf in root.xpath('//div[contains(@class, "shelfStat")]'):
             name = shelf.xpath('.//a[contains(@class, "actionLinkLite")]')[0].text_content().strip()
-            count = shelf.xpath('.//div[contains(@class, "smallText")]/a')[0].text_content().strip()
+            count = shelf.xpath('.//div[contains(@class, "smallText")]')[0].text_content().strip()
             count = int(count.split()[0].replace(',', ''))
             shelves[name] = count
         if not shelves:
