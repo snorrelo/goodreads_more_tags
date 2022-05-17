@@ -453,8 +453,8 @@ class ConfigWidget(DefaultConfigWidget):
         # groups.
         self.w_ext = qt.QWidget()
         self.l_ext = qt.QVBoxLayout(self.w_ext)
-        self.l.addWidget(self.w_ext, *self.l.getItemPosition(self.l.indexOf(self.gb)))
-        self.l.removeWidget(self.gb)
+        self.overl.insertWidget(self.overl.indexOf(self.gb), self.w_ext)
+        self.overl.removeWidget(self.gb)
         self.gb.hide()
 
         # Now we want to move over the listview into the new layout. We'll also style it a bit.
