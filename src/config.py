@@ -3,17 +3,19 @@ from __future__ import print_function
 from copy import deepcopy
 from textwrap import dedent
 
+from PyQt5 import QtWidgets
+from PyQt5.Qt import (Qt, QWidget, QVBoxLayout, QLabel, QLineEdit, QGridLayout, QHBoxLayout, QCheckBox, QIcon,
+                          QTableWidget, QTableWidgetItem, QInputDialog, QAbstractItemView, QToolButton,
+                          QObject, QEvent, QToolTip, QDoubleSpinBox, QRegularExpressionValidator,
+                          QRegularExpression, QSpinBox, QAbstractAnimation, pyqtSlot, QPropertyAnimation,
+                          QParallelAnimationGroup
+                          )
+
 from calibre.ebooks.txt.processor import convert_markdown
 from calibre.gui2 import get_current_db, question_dialog
 from calibre.gui2.complete2 import EditWithComplete
 from calibre.gui2.metadata.config import ConfigWidget as DefaultConfigWidget
 from calibre.utils.config import JSONConfig
-try:
-    from PyQt5 import Qt as QtGui, QtCore, QtWidgets
-    import PyQt5.Qt as qt
-except ImportError:
-    from PyQt4 import QtGui, QtCore, QtWidgets
-    import PyQt4.Qt as qt
 
 __license__ = 'BSD 3-clause'
 __copyright__ = '2019, Michon van Dooren <michon1992@gmail.com>'
@@ -178,27 +180,27 @@ def docmd2html(text):
     return html
 
 
-class ScrollEventFilter(qt.QObject):
+class ScrollEventFilter(QObject):
     """ An event filter that ignores scroll events. """
     def eventFilter(self, obj, event):
-        return event.type() == qt.QEvent.Wheel
+        return event.type() == QEvent.Wheel
 
 
 class EditWithCompleteWithoutScroll(EditWithComplete):
     """ Like EditWithComplete, but doesn't touch scroll events. """
     def __init__(self, *args, **kwargs):
         EditWithComplete.__init__(self, *args, **kwargs)
-        self.setFocusPolicy(qt.Qt.StrongFocus)
+        self.setFocusPolicy(Qt.StrongFocus)
         self.installEventFilter(ScrollEventFilter(self))
 
 
-class ShelfTagMappingTableWidget(qt.QTableWidget):
+class ShelfTagMappingTableWidget(QTableWidget):
     """ A widget to show a list of shelf name -> tag list mappings, and to edit the tag lists. """
     def __init__(self, parent, mappings):
-        qt.QTableWidget.__init__(self, parent)
+        QTableWidget.__init__(self, parent)
 
         # General look and feel.
-        self.setSelectionBehavior(qt.QAbstractItemView.SelectRows)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.setAlternatingRowColors(True)
 
         # Setup the columns.
@@ -228,8 +230,8 @@ class ShelfTagMappingTableWidget(qt.QTableWidget):
         self.setRowCount(len(mappings))
         for i, (shelf, tags) in enumerate(sorted(mappings.items(), key = lambda x: x[0])):
             # Set the label for the shelf name.
-            label = qt.QTableWidgetItem(shelf, qt.QTableWidgetItem.UserType)
-            label.setFlags(qt.Qt.ItemIsSelectable | qt.Qt.ItemIsEnabled)
+            label = QTableWidgetItem(shelf, QTableWidgetItem.ItemType.UserType)
+            label.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
             self.setItem(i, 0, label)
 
             # Set an editable field for the tags cell.
@@ -252,38 +254,38 @@ class ShelfTagMappingTableWidget(qt.QTableWidget):
         raise ValueError('Shelf not found')
 
 
-class ShelfTagMappingWidget(qt.QWidget):
+class ShelfTagMappingWidget(QWidget):
     """ A widget to manage a list of shelf name -> tag list mappings. """
     def __init__(self, parent, mapping):
-        qt.QWidget.__init__(self, parent)
-        self.layout = qt.QHBoxLayout(self)
+        QWidget.__init__(self, parent)
+        self.layout = QHBoxLayout(self)
 
         # Add the table.
         self.table = ShelfTagMappingTableWidget(self, mapping)
         self.layout.addWidget(self.table)
 
         # Add buttons next to the tag table to add/remove tags.
-        self.button_layout = qt.QVBoxLayout()
+        self.button_layout = QVBoxLayout()
         self.layout.addLayout(self.button_layout)
 
         # Button to add a new mapping.
-        add_mapping_button = QtGui.QToolButton(self)
+        add_mapping_button = QToolButton(self)
         add_mapping_button.setToolTip('Add mapping')
-        add_mapping_button.setIcon(qt.QIcon(I('plus.png')))
+        add_mapping_button.setIcon(QIcon(I('plus.png')))
         add_mapping_button.clicked.connect(self.add_mapping)
         self.button_layout.addWidget(add_mapping_button)
 
         # Button to remove a mapping.
-        remove_mapping_button = QtGui.QToolButton(self)
+        remove_mapping_button = QToolButton(self)
         remove_mapping_button.setToolTip('Remove mapping')
-        remove_mapping_button.setIcon(qt.QIcon(I('minus.png')))
+        remove_mapping_button.setIcon(QIcon(I('minus.png')))
         remove_mapping_button.clicked.connect(self.delete_mapping)
         self.button_layout.addWidget(remove_mapping_button)
 
         # Button to reset the mappings to the default set.
-        reset_defaults_button = QtGui.QToolButton(self)
+        reset_defaults_button = QToolButton(self)
         reset_defaults_button.setToolTip('Reset to default mappings')
-        reset_defaults_button.setIcon(qt.QIcon(I('edit-undo.png')))
+        reset_defaults_button.setIcon(QIcon(I('edit-undo.png')))
         reset_defaults_button.clicked.connect(self.reset_to_defaults)
         self.button_layout.addWidget(reset_defaults_button)
 
@@ -295,7 +297,7 @@ class ShelfTagMappingWidget(qt.QWidget):
 
     def add_mapping(self):
         # Prompt for the shelf name.
-        shelf, ok = qt.QInputDialog.getText(
+        shelf, ok = QInputDialog.getText(
             self,
             'Add new mapping',
             'Enter the Goodreads shelf name to create a mapping for:',
@@ -347,19 +349,19 @@ class ShelfTagMappingWidget(qt.QWidget):
         self.table.set_mappings(DEFAULT_SHELF_MAPPINGS)
 
 
-class ToolTipIcon(qt.QLabel):
+class ToolTipIcon(QLabel):
     """ An icon that shows a tooltip when hovered over. """
     def __init__(self, pixmap, tooltip, *args, **kwargs):
-        qt.QLabel.__init__(self, *args, **kwargs)
+        QLabel.__init__(self, *args, **kwargs)
         self.setPixmap(pixmap)
         self.tooltip = tooltip
         self.setMouseTracking(True)
 
     def mouseMoveEvent(self, event):
-        qt.QToolTip.showText(event.globalPos(), self.tooltip, self)
+        QToolTip.showText(event.globalPos(), self.tooltip, self)
 
 
-class PseudoFormLayoutWithHelp(qt.QGridLayout):
+class PseudoFormLayoutWithHelp(QGridLayout):
     """
     A QGridLayout that has been modified to work sort of like a QFormLayout, but with a third element in each row to
     provide "help" text for the row.
@@ -367,13 +369,13 @@ class PseudoFormLayoutWithHelp(qt.QGridLayout):
     def addRow(self, label, widget, description = None):
         row = self.rowCount()
 
-        if not isinstance(label, qt.QLabel):
-            label = qt.QLabel(label)
+        if not isinstance(label, QLabel):
+            label = QLabel(label)
         label.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self.addWidget(label, row, 0)
 
         if description:
-            pixmap = qt.QIcon(I('dialog_question.png')).pixmap(16, 16)
+            pixmap = QIcon(I('dialog_question.png')).pixmap(16, 16)
             tooltip_icon = ToolTipIcon(pixmap, description)
             tooltip_icon.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
             self.addWidget(tooltip_icon, row, 1)
@@ -392,18 +394,18 @@ class CollapsibleGroupBox(QtWidgets.QWidget):
 
         self.toggle_button = QtWidgets.QToolButton(text = title, checkable = True, checked = True)
         self.toggle_button.setStyleSheet("QToolButton { border: none; }")
-        self.toggle_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
+        self.toggle_button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.toggle_button.setArrowType(Qt.RightArrow)
         self.toggle_button.pressed.connect(self.onPressed)
 
         self.content_area = QtWidgets.QScrollArea(maximumHeight = 0, minimumHeight = 0)
         self.content_area.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
 
-        self.toggle_animation = QtCore.QParallelAnimationGroup(self)
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b'minimumHeight'))
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b'maximumHeight'))
-        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self.content_area, b'maximumHeight'))
+        self.toggle_animation = QParallelAnimationGroup(self)
+        self.toggle_animation.addAnimation(QPropertyAnimation(self, b'minimumHeight'))
+        self.toggle_animation.addAnimation(QPropertyAnimation(self, b'maximumHeight'))
+        self.toggle_animation.addAnimation(QPropertyAnimation(self.content_area, b'maximumHeight'))
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(0)
@@ -411,7 +413,7 @@ class CollapsibleGroupBox(QtWidgets.QWidget):
         layout.addWidget(self.toggle_button)
         layout.addWidget(self.content_area)
 
-    @QtCore.pyqtSlot()
+    @pyqtSlot()
     def onPressed(self):
         self.setOpen(self.toggle_button.isChecked())
 
@@ -419,11 +421,11 @@ class CollapsibleGroupBox(QtWidgets.QWidget):
         original_height = self.toggle_button.sizeHint().height()
 
         if should_be_open:
-            self.toggle_button.setArrowType(QtCore.Qt.DownArrow)
-            self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Forward)
+            self.toggle_button.setArrowType(Qt.DownArrow)
+            self.toggle_animation.setDirection(QAbstractAnimation.Direction.Forward)
         else:
-            self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
-            self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Backward)
+            self.toggle_button.setArrowType(Qt.RightArrow)
+            self.toggle_animation.setDirection(QAbstractAnimation.Direction.Backward)
 
         content_height = self.content_area.layout().sizeHint().height()
         self.setAnimation(0, original_height, original_height + content_height)
@@ -451,8 +453,8 @@ class ConfigWidget(DefaultConfigWidget):
         # By default, the settings contain a single groupbox with a listview in it. We want to make this a bit more
         # efficient (and pretty), so we will create a new hlayout for bot the default listview, as well as our custom
         # groups.
-        self.w_ext = qt.QWidget()
-        self.l_ext = qt.QVBoxLayout(self.w_ext)
+        self.w_ext = QWidget()
+        self.l_ext = QVBoxLayout(self.w_ext)
         self.overl.insertWidget(self.overl.indexOf(self.gb), self.w_ext)
         self.overl.removeWidget(self.gb)
         self.gb.hide()
@@ -461,7 +463,7 @@ class ConfigWidget(DefaultConfigWidget):
         self.gb.l.removeWidget(self.fields_view)
         self.l_ext.addWidget(self.fields_view)
         self.fields_view.setStyleSheet('QListView::item { margin: 2px 0; }')
-        self.fields_view.setSelectionMode(qt.QAbstractItemView.NoSelection)
+        self.fields_view.setSelectionMode(QAbstractItemView.NoSelection)
 
         # Add all groupboxes for the various settings.
         self.add_groupbox_thresholds()
@@ -488,7 +490,7 @@ class ConfigWidget(DefaultConfigWidget):
 
         # A setting to determine the threshold of the amount of people that need to have put a book in a shelf before it
         # is considered.
-        self.threshold_abs = qt.QSpinBox()
+        self.threshold_abs = QSpinBox()
         self.threshold_abs.setMinimum(0)
         self.threshold_abs.setValue(plugin_prefs.get(KEY_THRESHOLD_ABSOLUTE))
         gb.l.addRow('Threshold (absolute)', self.threshold_abs, description = docmd2html('''
@@ -526,7 +528,7 @@ class ConfigWidget(DefaultConfigWidget):
 
         # A setting to determine the threshold of the amount of people that need to have put a book in a shelf before it
         # is considered, as a percentage of something else.
-        self.threshold_pct = qt.QDoubleSpinBox()
+        self.threshold_pct = QDoubleSpinBox()
         self.threshold_pct.setMinimum(0)
         self.threshold_pct.setMaximum(100)
         self.threshold_pct.setSuffix('%')
@@ -549,8 +551,8 @@ class ConfigWidget(DefaultConfigWidget):
         )))
 
         # A setting to determine what the previous setting is based on.
-        self.threshold_pct_of = qt.QLineEdit()
-        self.threshold_pct_of.setValidator(qt.QRegExpValidator(qt.QRegExp(r'^[0-9]+(,\s*[0-9]+)*$')))
+        self.threshold_pct_of = QLineEdit()
+        self.threshold_pct_of.setValidator(QRegularExpressionValidator(QRegularExpression(r'^[0-9]+(,\s*[0-9]+)*$')))
         self.threshold_pct_of.setText(', '.join([str(p) for p in plugin_prefs.get(KEY_THRESHOLD_PERCENTAGE_OF)]))
         gb.l.addRow('Threshold percentage is based on', self.threshold_pct_of, description = docmd2html((
             '''
@@ -579,7 +581,7 @@ class ConfigWidget(DefaultConfigWidget):
         gb = self.gb_integration = self.add_groupbox('Goodreads Plugin Integration')
 
         # A setting to enable/disable the integration entirely.
-        self.goodreads_enabled = qt.QCheckBox()
+        self.goodreads_enabled = QCheckBox()
         self.goodreads_enabled.setChecked(plugin_prefs.get(KEY_INTEGRATION_ENABLED))
         gb.l.addRow('Enabled', self.goodreads_enabled, description = docmd2html('''
             Whether to enable the integration with the Goodreads plugin (if present).
@@ -593,7 +595,7 @@ class ConfigWidget(DefaultConfigWidget):
         '''))
 
         # A setting to determine how long to wait for the base Goodreads plugin to get results.
-        self.goodreads_timeout = qt.QSpinBox()
+        self.goodreads_timeout = QDoubleSpinBox()
         self.goodreads_timeout.setMinimum(0.1)
         self.goodreads_timeout.setValue(plugin_prefs.get(KEY_INTEGRATION_TIMEOUT))
         gb.l.addRow('Timeout', self.goodreads_timeout, description = docmd2html('''
